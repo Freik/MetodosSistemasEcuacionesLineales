@@ -1,0 +1,297 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package proyectoinf156;
+
+import java.awt.GridLayout;
+import javax.swing.JOptionPane;
+
+/**
+ *
+ * @author RuCo
+ */
+public class FrameCramer extends javax.swing.JInternalFrame {
+    private String etapas;
+    double[][] matriz;
+    static double[][]aux;
+    int filas;
+
+    int columnas;
+
+    String proceso = "";
+    static String solucion="";
+
+    /**
+     * Creates new form FrameCramer
+     */
+    public FrameCramer(double[][] matriz, int filas, int columnas) {
+        initComponents();
+        this.matriz = matriz;
+        this.filas = filas;
+        this.columnas = columnas;
+        calcularCramer(matriz);
+    }
+    
+    private void calcularCramer(double[][] matriz) {
+        int n = matriz.length;
+        
+        //convitiendo datos a una matriz y a un vector columna
+        double[] [] B = new double[matriz.length] [matriz[0].length-1];
+        double[]A=new double[matriz.length];
+        
+        //System.out.println ("Numero Filas es: " + matriz.length); //3 filas
+        
+        for (int i = 0 ; i < matriz.length ; i++)
+        {
+            for (int j = 0 ; j < matriz [i].length ; j++)
+            {
+                if (j == (matriz[i].length - 1))
+                {
+                    A[i]= matriz [i] [j];
+                }
+                else
+                {
+                    B[i][j]=matriz[i][j];
+                }
+            }
+        }
+        // El sistema esta en la forma Bx=A             
+        float Rcramer[] = new float [A.length];
+	double det = determinante (B);
+	if (det == 0)
+	{
+	    JOptionPane.showMessageDialog (null, "No tiene solucion");	    
+	}
+	double detTemp;
+	double c[] [] = new double [B.length] [B.length];
+	for (int i = 0 ; i < B.length ; i++)
+	{
+	    c = sustituye (B, A, i);
+	    detTemp = determinante (c);
+            //
+            PanelSolCramer panelEtapas = new PanelSolCramer();
+            panelEtapas.setEtapa("MATRIZ " + (i + 1));
+            aux = c;
+            panelEtapas.setModelo(aux, c.length, c[1].length-1);
+            
+            panel.setLayout(new GridLayout(i + 1, 1));
+            panel.add(panelEtapas);
+            setSize(getWidth(), getHeight() + 1);
+            setSize(getWidth(), getHeight() - 1);
+            // Para mostrar determinantes
+            panelEtapas.setDet("Det("+(i+1)+") = "+detTemp);
+            //System.out.println("El determinate "+i+" es:"+detTemp);
+	    Rcramer [i] = (float) detTemp / (float) det;
+	}
+        
+        String sol=mostrarX (Rcramer);
+        solucion=sol;
+        panelSoluciones panelSln = new panelSoluciones();
+        panelSln.setSoluciones(solucion);
+        panel.setLayout(new GridLayout(n+1, 1));
+        panel.add(panelSln);
+    }
+    
+    public static double determinante (double a[] [])
+    {
+	double c[] [] = new double [a.length + (a.length - 1)] [a.length];
+	double det = 0;
+
+	//almacena los resultados parciales
+	double par[] = new double [(a.length) * 2];
+
+	for (int i = 0 ; i < a.length ; i++)
+	{
+	    for (int j = 0 ; j < a [i].length ; j++)
+	    {
+		c [i] [j] = a [i] [j];
+	    }
+	}
+	int k = 0;
+	for (int i = a.length ; i < c.length ; i++)
+	{
+	    for (int j = 0 ; j < a.length ; j++)
+	    {
+		c [i] [j] = a [k] [j];
+	    }
+	    k++;
+	}
+
+	//calcula la suma de los productos y la inserta en par
+	k = 0;
+	double temp = 1;
+	int inc = 1;
+
+	for (int i = 0 ; i < a.length ; i++)
+	{
+	    for (int j = 0 ; j < a [i].length ; j++)
+	    {
+		temp = temp * c [k] [j];
+		k++;
+	    }
+	    k = inc;
+	    par [i] = temp;
+	    temp = 1;
+	    inc++;
+	}
+
+	//calcula la resta de los productos y la inserta en par
+	k = a.length - 1;
+	temp = 1;
+	inc = a.length - 1;
+	int l = (par.length) / 2;
+	for (int i = 0 ; i < a.length ; i++)
+	{
+	    for (int j = 0 ; j < a [i].length ; j++)
+	    {
+		temp = temp * c [k] [j];
+		k--; //k=k-1;
+	    }
+	    par [l] = -temp;
+	    temp = 1;
+	    inc++;
+	    k = inc;
+	    l++;
+	}
+	det = suma (par);
+	return det;
+    }
+    
+    public static double suma (double a[])
+    {
+	double result = 0;
+	for (int i = 0 ; i < a.length ; i++)
+	{
+	    result = result + a [i];
+	}
+
+	return result;
+    }
+    
+    public static double[] [] sustituye (double a[] [], double b[], int pos)
+    {
+	double c[] [] = new double [a.length] [a.length];
+	for (int i = 0 ; i < a.length ; i++)
+	{
+	    for (int j = 0 ; j < a [i].length ; j++)
+	    {
+		if (j == pos)
+		{
+		    c [i] [j] = b [i];
+		}
+		else
+		{
+		    c [i] [j] = a [i] [j];
+		}
+	    }
+	}
+	return c;
+    }
+    
+    
+    //muestra los resultados de X
+    public static String mostrarX (float a[])
+    {
+        String sol="";
+	for (int i = 0 ; i < a.length ; i++)
+	{
+	    sol = sol+"x"+ i + " es:   " + a [i]+"\n";
+	}
+        return sol;
+    }
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        jLabel1 = new javax.swing.JLabel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        panel = new javax.swing.JPanel();
+        soluciones = new javax.swing.JButton();
+
+        jLabel1.setFont(new java.awt.Font("Tahoma", 1, 24)); // NOI18N
+        jLabel1.setText("Cramer");
+
+        jScrollPane1.setBorder(javax.swing.BorderFactory.createTitledBorder("Procedimiento"));
+        jScrollPane1.setMinimumSize(new java.awt.Dimension(23, 23));
+        jScrollPane1.setName("jScrollPanel1");
+        jScrollPane1.setPreferredSize(new java.awt.Dimension(584, 525));
+
+        javax.swing.GroupLayout panelLayout = new javax.swing.GroupLayout(panel);
+        panel.setLayout(panelLayout);
+        panelLayout.setHorizontalGroup(
+            panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 582, Short.MAX_VALUE)
+        );
+        panelLayout.setVerticalGroup(
+            panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 523, Short.MAX_VALUE)
+        );
+
+        jScrollPane1.setViewportView(panel);
+
+        soluciones.setText("Soluciones");
+        soluciones.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                solucionesActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 520, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(221, 221, 221)
+                        .addComponent(jLabel1)
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addComponent(soluciones)
+                .addGap(213, 213, 213))
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addGap(24, 24, 24)
+                .addComponent(jLabel1)
+                .addGap(18, 18, 18)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 340, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(soluciones)
+                .addContainerGap())
+        );
+
+        pack();
+    }// </editor-fold>//GEN-END:initComponents
+
+    private void solucionesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_solucionesActionPerformed
+        // TODO add your handling code here:
+        /*
+         * int n = 3; float s[] = {6, 15, 55, 15, 55, 225, 55, 225,979}, x[] =
+         * {100, 150, 100}; Cholesky ch = new Cholesky(s,n); ch.tst();
+        resultado.setText(ch.salida);
+         */
+        JOptionPane.showMessageDialog(this, "Las Soluciones del Sistema son: \n" + solucion);
+    }//GEN-LAST:event_solucionesActionPerformed
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JPanel panel;
+    private javax.swing.JButton soluciones;
+    // End of variables declaration//GEN-END:variables
+
+}
